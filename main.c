@@ -8,12 +8,12 @@
 #include "HCSR04_Follow.h"
 #include "HCSR04_AO.h"
 
-// 工作模式枚举
-typedef enum {
-    MODE_MANUAL = 0,
-    MODE_FOLLOW,
-    MODE_OBSTACLE_AVOID
-} WorkMode;
+//// 工作模式枚举
+//typedef enum {
+//    MODE_MANUAL = 0,
+//    MODE_FOLLOW,
+//    MODE_OBSTACLE_AVOID
+//} WorkMode;
 
 int main(void)
 {
@@ -29,9 +29,6 @@ int main(void)
     HCSR04_Follow_Init(); // 跟随模块初始化
     HCSR04_AO_Init();    // 避障模块初始化
     
-    // 工作模式变量
-    static WorkMode current_mode = MODE_MANUAL;  // 当前工作模式：手动、跟随或避障
-    static uint32_t distance = 0;                // 当前测量的距离值，单位：cm
     
     // 初始化显示
     OLED_Clear();
@@ -49,25 +46,29 @@ int main(void)
         // 蓝牙控制处理（所有模式下都处理蓝牙指令）
         spp_control();
         
-        HCSR04_DisplayDistance();
-		distance = HCSR04_GetDistance();
+		// 获取并显示距离
+        uint32_t distance = HCSR04_GetDistance();
+		HCSR04_DisplayDistance(distance);
 
-        
         // 模式切换检查 - 根据模块运行状态更新当前模式
         if (HCSR04_Follow_IsRunning()) {
-            current_mode = MODE_FOLLOW;
-			HCSR04_Follow_Update(distance);
+//            current_mode = MODE_FOLLOW;
 			OLED_ShowString(1, 1, "Mode: Follow    ");
+			HCSR04_Follow_Update();
+			// 第4行状态由HCSR04_Follow_Update()更新
         } else if (HCSR04_AO_IsRunning()) {
-            current_mode = MODE_OBSTACLE_AVOID;
-			HCSR04_AO_Update();
+//            current_mode = MODE_OBSTACLE_AVOID;
 			OLED_ShowString(1, 1, "Mode: Avoid     ");
+			HCSR04_AO_Update();
+			// 第4行状态由HCSR04_AO_Update()更新
         } else {
             // 手动模式
-            current_mode = MODE_MANUAL;
+//            current_mode = MODE_MANUAL;
 			OLED_ShowString(1, 1, "Mode: Manual    ");
+			OLED_ShowString(4, 1, "Ready           ");
         }
- 
-        Delay_ms(100);    // 主循环延时
+		
+        Delay_ms(150);    // 优化主循环延时，平衡响应速度和显示稳定性
     }
 }
+
