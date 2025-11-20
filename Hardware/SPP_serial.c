@@ -218,6 +218,8 @@ extern void HCSR04_Follow_Start(void);
 extern void HCSR04_Follow_Stop(void);
 extern void HCSR04_AO_Start(void);
 extern void HCSR04_AO_Stop(void);
+extern void Trail_Start(void);
+extern void Trail_Stop(void);
 
 // 自定义的蓝牙控制小车的函数
 void spp_control(void)
@@ -265,17 +267,26 @@ void spp_control(void)
 		else if (strcmp(Serial_RxPacket, "Mode_Follow") == 0)		// 切换到跟随模式
 		{
 			HCSR04_AO_Stop();  // 先停止避障模式
+			Trail_Stop();      // 先停止循迹模式
 			HCSR04_Follow_Start();  // 启动跟随模式
 		}
 		else if (strcmp(Serial_RxPacket, "Mode_AO") == 0)			// 切换到避障模式
 		{
 			HCSR04_Follow_Stop();  // 先停止跟随模式
+			Trail_Stop();      // 先停止循迹模式
 			HCSR04_AO_Start();     // 启动避障模式
+		}
+		else if (strcmp(Serial_RxPacket, "Mode_Trail") == 0)		// 切换到循迹模式
+		{
+			HCSR04_Follow_Stop();  // 先停止跟随模式
+			HCSR04_AO_Stop();      // 先停止避障模式
+			Trail_Start();         // 启动循迹模式
 		}
 		else if (strcmp(Serial_RxPacket, "Mode_Manual") == 0)		// 切换到手动模式
 		{
 			HCSR04_Follow_Stop();  // 停止跟随模式
 			HCSR04_AO_Stop();      // 停止避障模式
+			Trail_Stop();          // 停止循迹模式
 			// 模式显示由main.c统一管理，这里不再更新
 		}
 		else						//上述所有条件均不满足，即收到了未知指令

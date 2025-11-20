@@ -7,6 +7,7 @@
 #include "HCSR04.h"
 #include "HCSR04_Follow.h"
 #include "HCSR04_AO.h"
+#include "trail.h"
 
 //// 工作模式枚举
 //typedef enum {
@@ -28,6 +29,7 @@ int main(void)
     HCSR04_Init();       // 超声波初始化
     HCSR04_Follow_Init(); // 跟随模块初始化
     HCSR04_AO_Init();    // 避障模块初始化
+    Trail_Init();        // 循迹模块初始化
     
     
     // 初始化显示
@@ -40,6 +42,7 @@ int main(void)
     // 外部函数声明
     extern uint8_t HCSR04_Follow_IsRunning(void);
     extern uint8_t HCSR04_AO_IsRunning(void);
+    extern uint8_t Trail_IsRunning(void);
     
     while(1)
     {
@@ -61,14 +64,33 @@ int main(void)
 			OLED_ShowString(1, 1, "Mode: Avoid     ");
 			HCSR04_AO_Update();
 			// 第4行状态由HCSR04_AO_Update()更新
+        } else if (Trail_IsRunning()) {
+//            current_mode = MODE_TRAIL;
+			OLED_ShowString(1, 1, "Mode: Trail     ");
+			Trail_Update();
+			// 第4行状态由Trail_Update()更新
         } else {
             // 手动模式
 //            current_mode = MODE_MANUAL;
 			OLED_ShowString(1, 1, "Mode: Manual    ");
+			
+			// 在手动模式下显示四个红外传感器状态
+			// 读取四个红外传感器的状态
+			uint8_t left_sensor = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_11);
+			uint8_t left_mid_sensor = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_10);
+			uint8_t right_mid_sensor = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
+			uint8_t right_sensor = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_12);
+			
+			// 在OLED第3行显示传感器状态
+			OLED_ShowString(3, 1, "Sensors:        ");
+			OLED_ShowNum(3, 10, left_sensor, 1);
+			OLED_ShowNum(3, 12, left_mid_sensor, 1);
+			OLED_ShowNum(3, 14, right_mid_sensor, 1);
+			OLED_ShowNum(3, 16, right_sensor, 1);
+			
 			OLED_ShowString(4, 1, "Ready           ");
         }
 		
         Delay_ms(150);    // 优化主循环延时，平衡响应速度和显示稳定性
     }
 }
-
